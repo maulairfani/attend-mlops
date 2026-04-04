@@ -1,20 +1,19 @@
 # attend-mlops
 
-MLOps pipeline for Attend.AI — handles model lifecycle management and training pipelines for all Attend.AI models.
+MLOps pipeline for [Attend.AI](https://github.com/naobyprawira/attend) — handles model lifecycle management and training pipelines for all Attend.AI models.
 
 ## Overview
 
 This repo manages the full ML lifecycle: data versioning, experiment tracking, training, evaluation, model registration, and deployment to the Attend.AI backend.
-
-**Current focus:** Face recognition model — benchmarking architecture candidates (ArcFace, AdaFace, Facenet512)
 
 ## Stack
 
 | Component | Tool |
 |---|---|
 | Pipeline orchestration | ZenML |
-| Experiment tracking | W&B |
-| Model registry | W&B Model Registry |
+| Experiment tracking | MLflow (self-hosted) |
+| Model registry | MLflow Model Registry (self-hosted) |
+| Artifact storage | MinIO (self-hosted, S3-compatible) |
 | Data versioning | DVC |
 | Data validation | Great Expectations |
 | Drift detection | Evidently AI |
@@ -35,7 +34,7 @@ attend-mlops/
 │   ├── processors/            # Preprocessing & augmentation
 │   └── validation/            # Great Expectations suites
 ├── core/
-│   ├── registry.py            # W&B Model Registry wrapper
+│   ├── registry.py            # MLflow Model Registry wrapper
 │   ├── monitoring.py          # Evidently AI drift detection
 │   └── dataset.py             # DVC dataset management
 ├── notebooks/                 # Experimentation only, never production
@@ -55,8 +54,8 @@ Export enrollment data (Attend.AI)
 → Training / fine-tuning
 → Evaluation (TAR@FAR)
 → Compare with current production model
-→ Pass: register to W&B → notify Attend.AI (canary deploy)
-→ Fail: log as failed experiment in W&B
+→ Pass: register to MLflow → notify Attend.AI (canary deploy)
+→ Fail: log as failed experiment in MLflow
 ```
 
 ## Setup
@@ -65,17 +64,37 @@ Export enrollment data (Attend.AI)
 # Install dependencies
 pip install -e ".[dev]"
 
+# Copy and fill in credentials
+cp .env.example .env
+
 # Initialize ZenML
 zenml init
 zenml stack register attend-mlops-local -o default -a default
 zenml stack set attend-mlops-local
 
-# Login to W&B
-wandb login
-
 # Initialize DVC
 dvc init
 ```
+
+> MLflow and MinIO must be running and reachable before executing any pipeline.
+> Set `MLFLOW_TRACKING_URI` and MinIO credentials in `.env`.
+
+## Running the Benchmark Pipeline (Sprint 1)
+
+Benchmark pre-trained model candidates on LFW pairs to select the best baseline:
+
+```bash
+# Download LFW dataset first
+python data/sources/download_lfw.py
+
+# Benchmark a single model
+python -m models.face_recognition.pipelines.benchmark_pipeline --model arcface_buffalo_l
+
+# Benchmark all candidates
+python -m models.face_recognition.pipelines.benchmark_pipeline --all
+```
+
+Results are logged to MLflow under experiment `attend-face-recognition-benchmark`.
 
 ## Running the Training Pipeline
 
@@ -100,9 +119,9 @@ python data/sources/export_attend.py
 ## Deployment
 
 Models are deployed to Attend.AI via a pull-based mechanism:
-1. Model promoted in W&B Model Registry
+1. Model promoted in MLflow Model Registry (`production` alias)
 2. Attend.AI backend notified via webhook
-3. Backend downloads new artifact and hot-reloads without restart
+3. Backend downloads new artifact from MLflow (stored in MinIO) and hot-reloads without restart
 4. Canary rollout: gradual traffic shift from old model to new
 
 ## Adding a New Model
