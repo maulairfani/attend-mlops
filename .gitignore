@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+dist/
+
+# Data (tracked by DVC)
+data/raw/
+data/processed/
+*.dvc
+
+# Models
+*.onnx
+*.pt
+*.pth
+
+# Notebooks checkpoints
+.ipynb_checkpoints/
+
+# Env
+.env
+*.env
+
+# W&B
+wandb/
+
+# ZenML
+.zenml/
+
+# OS
+.DS_Store
+desktop.ini

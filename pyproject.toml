@@ -1,0 +1,28 @@
+[project]
+name = "attend-mlops"
+version = "0.1.0"
+description = "MLOps pipeline for Attend.AI models"
+requires-python = ">=3.10"
+
+dependencies = [
+    "zenml",
+    "wandb",
+    "dvc",
+    "great-expectations",
+    "evidently",
+    "torch",
+    "torchvision",
+    "onnxruntime",
+    "opencv-python",
+    "numpy",
+    "pandas",
+    "scikit-learn",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+    "mypy",
+]

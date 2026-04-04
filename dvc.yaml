@@ -1,0 +1,10 @@
+stages:
+  download_lfw:
+    cmd: python data/sources/download_lfw.py
+    outs:
+      - data/raw/lfw
+
+  export_attend:
+    cmd: python data/sources/export_attend.py
+    outs:
+      - data/raw/attend_enrollment

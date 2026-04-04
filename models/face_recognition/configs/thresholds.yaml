@@ -1,0 +1,5 @@
+evaluation:
+  # Minimum TAR at given FAR to pass registration
+  tar_at_far_0.1: 0.90
+  tar_at_far_0.01: 0.85
+  rank1: 0.95

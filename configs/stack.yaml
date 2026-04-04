@@ -1,0 +1,9 @@
+# ZenML stack configuration
+stack:
+  name: attend-mlops-local
+  orchestrator: local
+  artifact_store: local
+
+wandb:
+  project: attend-mlops
+  entity: null  # set to your W&B team name

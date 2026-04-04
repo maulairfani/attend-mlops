@@ -1,0 +1,18 @@
+model:
+  architecture: facenet512  # options: facenet512, arcface, adaface
+  input_size: 160
+  embedding_size: 512
+
+training:
+  epochs: 50
+  batch_size: 64
+  learning_rate: 0.0001
+  optimizer: adam
+
+data:
+  min_images_per_identity: 5
+  val_split: 0.1
+  test_split: 0.1
+  augmentation:
+    horizontal_flip: true
+    brightness_range: [0.8, 1.2]
