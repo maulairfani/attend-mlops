@@ -6,7 +6,7 @@ MLOps pipeline for Attend.AI — handles model lifecycle management and training
 
 This repo manages the full ML lifecycle: data versioning, experiment tracking, training, evaluation, model registration, and deployment to the Attend.AI backend.
 
-**Current focus:** Face recognition model (Facenet512 / ArcFace / AdaFace)
+**Current focus:** Face recognition model — benchmarking architecture candidates (ArcFace, AdaFace, Facenet512)
 
 ## Stack
 
