@@ -1,0 +1,104 @@
+services:
+
+  # ─── MinIO ────────────────────────────────────────────────────────────────
+  # S3-compatible object storage.
+  # Bucket "mlflow-artifacts" → MLflow artifact store
+  # Bucket "dvc-store"        → DVC remote storage
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: attend-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # MinIO Console (browser UI)
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Creates the two required buckets on first startup.
+  minio-init:
+    image: quay.io/minio/mc:latest
+    container_name: attend-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin};
+        mc mb --ignore-existing local/mlflow-artifacts;
+        mc mb --ignore-existing local/dvc-store;
+        echo 'Buckets ready.';
+      "
+
+  # ─── MLflow ───────────────────────────────────────────────────────────────
+  # Tracking server + Model Registry.
+  # Artifact store → s3://mlflow-artifacts (backed by MinIO above)
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.19.0
+    container_name: attend-mlflow
+    restart: unless-stopped
+    depends_on:
+      minio-init:
+        condition: service_completed_successfully
+    ports:
+      - "5000:5000"
+    environment:
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    command: >
+      mlflow server
+        --host 0.0.0.0
+        --port 5000
+        --backend-store-uri sqlite:////mlflow/mlflow.db
+        --default-artifact-root s3://mlflow-artifacts/
+        --serve-artifacts
+    volumes:
+      - mlflow_data:/mlflow
+
+  # ─── ZenML ────────────────────────────────────────────────────────────────
+  # Pipeline orchestration server.
+  # MySQL backend keeps pipeline metadata durable across restarts.
+  zenml-db:
+    image: mysql:8.0
+    container_name: attend-zenml-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${ZENML_MYSQL_ROOT_PASSWORD:-zenml}
+      MYSQL_DATABASE: zenml
+      MYSQL_USER: zenml
+      MYSQL_PASSWORD: ${ZENML_MYSQL_PASSWORD:-zenml}
+    volumes:
+      - zenml_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  zenml:
+    image: zenmldocker/zenml-server:latest
+    container_name: attend-zenml
+    restart: unless-stopped
+    depends_on:
+      zenml-db:
+        condition: service_healthy
+    ports:
+      - "8237:8080"
+    environment:
+      ZENML_STORE_URL: mysql://zenml:${ZENML_MYSQL_PASSWORD:-zenml}@zenml-db/zenml
+      ZENML_DEFAULT_USER_NAME: ${ZENML_USER:-admin}
+      ZENML_DEFAULT_USER_PASSWORD: ${ZENML_PASSWORD:-admin}
+
+volumes:
+  minio_data:
+  mlflow_data:
+  zenml_db_data:
