@@ -40,7 +40,7 @@ LFW_DATA_PATH = "data/raw/lfw"
 
 
 @pipeline
-def benchmark_pipeline(model_name: str):
+def benchmark_pipeline(model_name: str, max_images: int | None = None):
     """
     Preprocess LFW images and evaluate one model candidate.
 
@@ -48,11 +48,12 @@ def benchmark_pipeline(model_name: str):
         1. preprocess — align and normalize all LFW images (cached after first run)
         2. evaluate   — compute TAR@FAR and AUC, log to MLflow
     """
-    aligned_path = preprocess(data_path=LFW_DATA_PATH)
+    aligned_path = preprocess(data_path=LFW_DATA_PATH, max_images=max_images)
     evaluate(
         model_name=model_name,
         preprocessed_data_path=aligned_path,
         pairs_path=f"{LFW_DATA_PATH}/pairs.txt",
+        max_pairs=max_images,
     )
 
 
@@ -61,6 +62,7 @@ if __name__ == "__main__":
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--model", choices=ALL_CANDIDATES, help="Single model to benchmark")
     group.add_argument("--all", action="store_true", help="Benchmark all candidates")
+    parser.add_argument("--max-images", type=int, default=None, help="Limit number of images to preprocess (default: all)")
     args = parser.parse_args()
 
     candidates = ALL_CANDIDATES if args.all else [args.model]
@@ -71,4 +73,4 @@ if __name__ == "__main__":
         print(f"\n{'='*50}")
         print(f"Benchmarking: {model_name}")
         print(f"{'='*50}")
-        benchmark_pipeline(model_name=model_name)
+        benchmark_pipeline(model_name=model_name, max_images=args.max_images)

@@ -1,3 +1,6 @@
+[tool.setuptools.packages.find]
+include = ["core*", "data*", "models*"]
+
 [project]
 name = "attend-mlops"
 version = "0.1.0"
@@ -5,9 +8,10 @@ description = "MLOps pipeline for Attend.AI models"
 requires-python = ">=3.10"
 
 dependencies = [
-    "zenml",
+    "zenml==0.94.1",
+    "sqlalchemy-utils",
     "mlflow",
-    "dvc",
+    "dvc[s3]",
     "great-expectations",
     "evidently",
     "torch",

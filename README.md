@@ -100,13 +100,40 @@ pip install -e ".[dev]"
 
 ```bash
 zenml init
-zenml connect --url http://localhost:8237
+zenml login http://localhost:8237 --username admin --password "YourPassword!"
 zenml stack register attend-mlops -o default -a default --set
 ```
 
-#### 5. Set up DVC remote *(once, then commit)*
+#### 5. Configure ZenML artifact store (MinIO) *(optional)*
+
+> **Skip this step if you don't need artifact visualization in the ZenML dashboard.** The default local artifact store works fine for running pipelines — all metrics and results are still visible in MLflow at `localhost:5000`.
+
+Add `minio` to your hosts file so the local client can resolve the Docker service name.
+Open PowerShell **as Administrator**:
+
+```powershell
+Add-Content -Path "C:\Windows\System32\drivers\etc\hosts" -Value "127.0.0.1 minio"
+```
+
+Then register the artifact store:
 
 ```bash
+zenml integration install s3 -y
+
+zenml artifact-store register minio-store \
+  --flavor s3 \
+  --path="s3://zenml-artifacts" \
+  --client_kwargs='{"endpoint_url": "http://minio:9000", "aws_access_key_id": "minioadmin", "aws_secret_access_key": "minioadmin"}'
+
+zenml stack update attend-mlops -a minio-store
+```
+
+> **Note:** We use `http://minio:9000` (Docker service name) instead of `localhost` because the ZenML server runs inside Docker and needs to reach MinIO via the Docker network. The hosts file entry makes `minio` resolve to `127.0.0.1` on the local machine so the Python client can also reach it.
+
+#### 7. Set up DVC remote *(once, then commit)*
+
+```bash
+# If remote already exists from a previous setup, add --force
 dvc remote add -d minio s3://dvc-store
 dvc remote modify minio endpointurl http://localhost:9000
 dvc remote modify minio access_key_id minioadmin
@@ -114,7 +141,7 @@ dvc remote modify minio secret_access_key minioadmin
 git add .dvc/config && git commit -m "chore: configure DVC remote"
 ```
 
-#### 6. Pull datasets
+#### 8. Pull datasets
 
 ```bash
 dvc pull
@@ -185,9 +212,24 @@ AWS_SECRET_ACCESS_KEY=<from-admin>
 
 ```bash
 zenml init
-zenml connect --url http://<vps-ip>:8237
+zenml login http://<vps-ip>:8237 --username admin --password "YourPassword!"
 zenml stack register attend-mlops -o default -a default --set
 ```
+
+##### Configure ZenML artifact store (MinIO on VPS) *(optional)*
+
+```bash
+zenml integration install s3 -y
+
+zenml artifact-store register minio-store \
+  --flavor s3 \
+  --path="s3://zenml-artifacts" \
+  --client_kwargs='{"endpoint_url": "http://<vps-ip>:9000", "aws_access_key_id": "<MINIO_ROOT_USER>", "aws_secret_access_key": "<MINIO_ROOT_PASSWORD>"}'
+
+zenml stack update attend-mlops -a minio-store
+```
+
+> **Note:** For VPS setup, use the VPS public IP directly — no hosts file entry needed since MinIO is reachable over the network.
 
 ##### Pull datasets
 

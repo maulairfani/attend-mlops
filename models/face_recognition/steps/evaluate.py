@@ -12,13 +12,16 @@ Model candidates:
 - "facenet512"         — FaceNet 512-d (via ONNX)
 """
 
-from pathlib import Path
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning, module="insightface")
 
-import mlflow
-import numpy as np
-from insightface.app import FaceAnalysis
-from sklearn.metrics import auc, roc_curve
-from zenml import step
+from pathlib import Path  # noqa: E402
+
+import mlflow  # noqa: E402
+import numpy as np  # noqa: E402
+from insightface.app import FaceAnalysis  # noqa: E402
+from sklearn.metrics import auc, roc_curve  # noqa: E402
+from zenml import step  # noqa: E402
 
 
 # --- Model loaders ---
@@ -146,7 +149,7 @@ def _cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
 # --- ZenML step ---
 
 @step
-def evaluate(model_name: str, preprocessed_data_path: str, pairs_path: str) -> dict:
+def evaluate(model_name: str, preprocessed_data_path: str, pairs_path: str, max_pairs: int | None = None) -> dict:
     """
     Evaluate a face recognition model on LFW pairs.
 
@@ -167,6 +170,8 @@ def evaluate(model_name: str, preprocessed_data_path: str, pairs_path: str) -> d
     """
     aligned_dir = Path(preprocessed_data_path)
     pairs = _load_pairs(Path(pairs_path), aligned_dir)
+    if max_pairs is not None:
+        pairs = pairs[:max_pairs]
 
     _, get_embedding = _load_model(model_name)
 

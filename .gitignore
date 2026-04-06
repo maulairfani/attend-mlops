@@ -9,6 +9,8 @@ dist/
 data/raw/
 data/processed/
 *.dvc
+!.dvc
+!.dvc/**
 
 # Models
 *.onnx

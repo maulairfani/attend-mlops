@@ -10,12 +10,15 @@ Images that fail detection are skipped and logged.
 """
 
 import json
-from pathlib import Path
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning, module="insightface")
 
-import cv2
-import numpy as np
-from insightface.app import FaceAnalysis
-from zenml import step
+from pathlib import Path  # noqa: E402
+
+import cv2  # noqa: E402
+import numpy as np  # noqa: E402
+from insightface.app import FaceAnalysis  # noqa: E402
+from zenml import step  # noqa: E402
 
 
 def _load_detector() -> FaceAnalysis:
@@ -49,7 +52,7 @@ def _align_and_normalize(app: FaceAnalysis, image_path: Path) -> np.ndarray | No
 
 
 @step
-def preprocess(data_path: str) -> str:
+def preprocess(data_path: str, max_images: int | None = None) -> str:
     """
     Detect, align, and normalize all LFW face images.
 
@@ -69,6 +72,8 @@ def preprocess(data_path: str) -> str:
     app = _load_detector()
 
     image_paths = list(images_dir.rglob("*.jpg"))
+    if max_images is not None:
+        image_paths = image_paths[:max_images]
     print(f"Processing {len(image_paths)} images...")
 
     skipped = []

@@ -10,6 +10,7 @@ training:
   optimizer: adam
 
 data:
+  max_images: null  # limit total images to preprocess, null = use all
   min_images_per_identity: 5
   val_split: 0.1
   test_split: 0.1

@@ -35,6 +35,7 @@ services:
         mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin};
         mc mb --ignore-existing local/mlflow-artifacts;
         mc mb --ignore-existing local/dvc-store;
+        mc mb --ignore-existing local/zenml-artifacts;
         echo 'Buckets ready.';
       "
 
@@ -97,6 +98,9 @@ services:
       ZENML_STORE_URL: mysql://zenml:${ZENML_MYSQL_PASSWORD:-zenml}@zenml-db/zenml
       ZENML_DEFAULT_USER_NAME: ${ZENML_USER:-admin}
       ZENML_DEFAULT_USER_PASSWORD: ${ZENML_PASSWORD:-admin}
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
 
 volumes:
   minio_data:
