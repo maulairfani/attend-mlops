@@ -1,5 +1,5 @@
 [tool.setuptools.packages.find]
-include = ["core*", "data*", "models*"]
+include = ["core*", "data*", "models*", "serving*"]
 
 [project]
 name = "attend-mlops"
@@ -9,6 +9,8 @@ requires-python = ">=3.10"
 
 dependencies = [
     "zenml==0.94.1",
+    "fastapi",
+    "uvicorn[standard]",
     "sqlalchemy-utils",
     "mlflow",
     "dvc[s3]",
