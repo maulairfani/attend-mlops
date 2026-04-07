@@ -23,6 +23,7 @@ data/processed/
 # Env
 .env
 *.env
+.env.ai
 
 # W&B
 wandb/
@@ -33,3 +34,6 @@ wandb/
 # OS
 .DS_Store
 desktop.ini
+
+# Non-app archived content
+non_app_archive/
