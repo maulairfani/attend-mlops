@@ -1,0 +1,22 @@
+.git/
+.gitignore
+.dvc/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.*
+*.env
+
+# Large data/artifacts not needed for serving image builds
+data/
+notebooks/
+models/
+core/
+configs/
+dist/
+*.onnx
+*.pt
+*.pth
