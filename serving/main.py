@@ -1,4 +1,4 @@
-"""Kamera-compatible AI runtime service.
+"""Attend-compatible AI runtime service.
 
 Provides:
 - /ws/camera: camera frame ingestion

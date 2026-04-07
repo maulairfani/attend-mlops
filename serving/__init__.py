@@ -1,1 +1,1 @@
-"""Runtime serving package for kamera-compatible AI WebSocket endpoints."""
+"""Runtime serving package for attend-compatible AI WebSocket endpoints."""
